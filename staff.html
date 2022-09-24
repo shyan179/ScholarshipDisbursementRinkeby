@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Staff Page (Rinkeby Testnet)</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+	<script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
+
+<script>
+
+//function to clear all text fields and alert messages on scholarship disbursement part
+function Clear1() {
+     document.getElementById("id1").value = "";
+	 document.getElementById("attendance").value = "";
+	 document.getElementById("mark").value = "";
+	 $("#E1_1").css('display','none');
+	 $("#E1_2").css('display','none');
+	 $("#E1_3").css('display','none');
+	 $("#paySuccess").css('display','none');
+	 $("#payFail").css('display','none');
+	 $("#notMet").css('display','none');
+}
+
+//function to clear all text fields and alert messages on refund scholarship part
+function Clear2() {
+   document.getElementById("id2").value = "";
+   $("#E2").css('display','none');
+   $("#refundSuccess").css('display','none');
+   $("#refundFail").css('display','none');
+}
+
+//function to clear all text fields and alert messages on activate scholarship part
+function Clear3() {
+	document.getElementById("id3").value = "";
+	$("#E3").css('display','none');
+	$("#activeSuccess").css('display','none');
+	$("#activeFail").css('display','none');
+ }
+
+//function to check all text fields are entered for scholarship disbursement before direct to smart contract
+//else show error messages
+ function Check1() {
+	$("#paySuccess").css('display','none');
+	$("#payFail").css('display','none');
+	$("#notMet").css('display','none');
+	document.getElementById("fail1").textContent = "";
+	document.getElementById("done").textContent = "";
+	var id1 = document.getElementById("id1").value;
+	var attendance = document.getElementById("attendance").value;
+	var mark = document.getElementById("mark").value;
+	if (id1 == "" || attendance =="" || mark =="" || mark < 0 || mark > 100 || attendance < 0 || attendance > 100) {
+		if (id1 == "") {$("#E1_1").css('display','block');} else {$("#E1_1").css('display','none');}
+		if (attendance == "" || attendance < 0 || attendance > 100) {$("#E1_2").css('display','block');} else {$("#E1_2").css('display','none');}
+		if (mark == "" || mark < 0 || mark > 100) {$("#E1_3").css('display','block');} else {$("#E1_3").css('display','none');}
+	} else {
+		$("#E1_1").css('display','none');
+		$("#E1_2").css('display','none');
+		$("#E1_3").css('display','none');
+		pay();
+	}
+}
+
+//function to check all text fields are entered for scholarship refund before direct to smart contract
+//else show error messages
+function Check2() {
+	$("#refundSuccess").css('display','none');
+	$("#refundFail").css('display','none');
+	document.getElementById("fail2").textContent = "";
+	var id2 = document.getElementById("id2").value;
+	if (id2 == "") {
+		$("#E2").css('display','block');
+	} else {
+		$("#E2").css('display','none');
+		refund();
+	}
+}
+
+//function to check all text fields are entered for scholarship activation before direct to smart contract
+//else show error messages
+function Check3() {
+	$("#activeSuccess").css('display','none');
+	$("#activeFail").css('display','none');
+	document.getElementById("fail3").textContent = "";
+	var id3 = document.getElementById("id3").value;
+	if (id3 == "") {
+		$("#E3").css('display','block');
+	} else {
+		$("#E3").css('display','none');
+		active();
+	}
+}
+
+//scholarship disbursement smart contact function
+async function pay() {
+	const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+	let accounts = await provider.send("eth_requestAccounts", []);
+		let account = accounts[0];
+		provider.on('accountsChanged', function (accounts) {
+			account = accounts[0];
+			console.log(address); // Print new address
+		});
+	const signer = provider.getSigner();
+
+	//change the provider smart contract address here if you use another smart contract address
+	const contractAddress = '0xaa31d34920fCBA7933Ce03cbDe59b46ff6f3b56C';
+	
+	//abi for the smart contract, if any changes made, update the abi here
+	const abi = [
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_ID",
+				"type": "uint256"
+			}
+		],
+		"name": "processActivation",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_ID",
+				"type": "uint256"
+			}
+		],
+		"name": "processRefund",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_ID",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_Attendance",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_AvgMark",
+				"type": "uint256"
+			}
+		],
+		"name": "resultNpay",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_StuContractAdd",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_SchlContractAdd",
+				"type": "address"
+			}
+		],
+		"stateMutability": "payable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "ReceivedEth",
+		"type": "event"
+	},
+	{
+		"stateMutability": "payable",
+		"type": "fallback"
+	},
+	{
+		"stateMutability": "payable",
+		"type": "receive"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_ID",
+				"type": "uint256"
+			}
+		],
+		"name": "viewStatus",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
+
+	const contract = new ethers.Contract(contractAddress, abi, signer);
+
+	let ID1 = document.getElementById("id1").value;
+	let attendance = document.getElementById("attendance").value;
+	let mark = document.getElementById("mark").value;
+
+	//catch the error message if the smart contract failed
+	try {
+		let transaction = await contract.resultNpay(ID1,attendance,mark);
+		await transaction.wait();
+		let status = await contract.viewStatus(ID1);
+		Clear1();
+		$("#payFail").css('display','none');
+		if (status === "paid") {
+			document.getElementById("done").insertAdjacentHTML("beforeend", "<strong>Student ID </strong>: " + ID1);
+			$("#paySuccess").css('display','block');
+			$("#notMet").css('display','none');
+		} else if (status === "failed") {
+			$("#paySuccess").css('display','none');
+			$("#notMet").css('display','block');
+		} else {
+			$("#paySuccess").css('display','none');
+			$("#notMet").css('display','none');
+			document.getElementById("fail1").insertAdjacentHTML("beforeend", "Scholarship status undefined");
+			$("#payFail").css('display','block');
+		}
+	  } catch (err) {
+		Clear1();
+		$("#paySuccess").css('display','none');
+		let text = err.stack;
+		const myArray = text.split("____");
+		document.getElementById("fail1").insertAdjacentHTML("beforeend", myArray[1]);
+		$("#payFail").css('display','block');
+		console.log(err);
+	  }
+  };
+
+//scholarship refund smart contact function
+async function refund() {
+	const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+	let accounts = await provider.send("eth_requestAccounts", []);
+		let account = accounts[0];
+		provider.on('accountsChanged', function (accounts) {
+			account = accounts[0];
+			console.log(address); // Print new address
+		});
+	const signer = provider.getSigner();
+
+	//change the provider smart contract address here if you use another smart contract address
+	const contractAddress = '0xaa31d34920fCBA7933Ce03cbDe59b46ff6f3b56C';
+	
+	//abi for the smart contract, if any changes made, update the abi here
+	const abi = [
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_ID",
+				"type": "uint256"
+			}
+		],
+		"name": "processActivation",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_ID",
+				"type": "uint256"
+			}
+		],
+		"name": "processRefund",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_ID",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_Attendance",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_AvgMark",
+				"type": "uint256"
+			}
+		],
+		"name": "resultNpay",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_StuContractAdd",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_SchlContractAdd",
+				"type": "address"
+			}
+		],
+		"stateMutability": "payable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "ReceivedEth",
+		"type": "event"
+	},
+	{
+		"stateMutability": "payable",
+		"type": "fallback"
+	},
+	{
+		"stateMutability": "payable",
+		"type": "receive"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_ID",
+				"type": "uint256"
+			}
+		],
+		"name": "viewStatus",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
+
+	const contract = new ethers.Contract(contractAddress, abi, signer);
+
+	let ID2 = document.getElementById("id2").value;
+
+	//catch the error message if the smart contract failed
+	try {
+		let transaction = await contract.processRefund(ID2);
+		await transaction.wait();
+		Clear2();
+		$("#refundSuccess").css('display','block');
+		$("#refundFail").css('display','none');
+	  } catch (err) {
+		Clear2();
+		$("#refundSuccess").css('display','none');
+		let text2 = err.stack;
+		const myArray2 = text2.split("____");
+		document.getElementById("fail2").insertAdjacentHTML("beforeend", myArray2[1]);
+		$("#refundFail").css('display','block');
+		console.log(err);
+	  }
+  };
+
+//scholarship activation smart contact function
+async function active() {
+	const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+	let accounts = await provider.send("eth_requestAccounts", []);
+		let account = accounts[0];
+		provider.on('accountsChanged', function (accounts) {
+			account = accounts[0];
+			console.log(address); // Print new address
+		});
+	const signer = provider.getSigner();
+
+	//change the provider smart contract address here if you use another smart contract address
+	const contractAddress = '0xaa31d34920fCBA7933Ce03cbDe59b46ff6f3b56C';
+	
+	//abi for the smart contract, if any changes made, update the abi here
+	const abi = [
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_ID",
+				"type": "uint256"
+			}
+		],
+		"name": "processActivation",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_ID",
+				"type": "uint256"
+			}
+		],
+		"name": "processRefund",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_ID",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_Attendance",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_AvgMark",
+				"type": "uint256"
+			}
+		],
+		"name": "resultNpay",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_StuContractAdd",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_SchlContractAdd",
+				"type": "address"
+			}
+		],
+		"stateMutability": "payable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "ReceivedEth",
+		"type": "event"
+	},
+	{
+		"stateMutability": "payable",
+		"type": "fallback"
+	},
+	{
+		"stateMutability": "payable",
+		"type": "receive"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_ID",
+				"type": "uint256"
+			}
+		],
+		"name": "viewStatus",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
+
+	const contract = new ethers.Contract(contractAddress, abi, signer);
+
+	let ID3 = document.getElementById("id3").value;
+
+	//catch the error message if the smart contract failed
+	try {
+		let transaction = await contract.processActivation(ID3);
+		await transaction.wait();
+		Clear3();
+		$("#activeSuccess").css('display','block');
+		$("#activeFail").css('display','none');
+	  } catch (err) {
+		Clear3();
+		$("#activeSuccess").css('display','none');
+		let text3 = err.stack;
+		const myArray3 = text3.split("____");
+		document.getElementById("fail3").insertAdjacentHTML("beforeend", myArray3[1]);
+		$("#activeFail").css('display','block');
+		console.log(err);
+	  }
+  };
+</script>
+</head>
+
+<body class="container pt-5">
+	<div class="container-fluid p-5 bg-primary text-white text-center">
+		<h1>Staff Page</h1>
+		<p>This page is for the staff to enter student attendance and mark for the auto scholarship disbursement, to process refund and to activate failed scholarship</p> 
+	</div>
+	
+	<div class="container p-3 my-5 border">
+		<form>
+			<h2 class="text-center">Scholarship Disbursement</h2>
+	
+			<!--smart contract failed alert message, error message captured from smart contract-->
+			<div id="payFail" class="alert alert-danger" style="display:none;">
+				<strong>Failed!</strong> <span id="fail1"></span>
+			</div>
+		
+			<!--smart contract run success message-->
+			<div id="paySuccess" class="alert alert-success" style="display:none;">
+				<p><strong>Success!</strong> Scholarship payment has been successfully disbursed to student below</p>
+				<div id="done"></div>
+			</div>
+
+			<!--smart contract warning alert message if the student failed the mark and attendance requirements-->
+			<div id="notMet" class="alert alert-warning" style="display:none;">
+				<p><strong>Warning!</strong> Student's mark and attendance do not meet the scholarship requirements and therefore no disbursement done</p>
+			</div>
+	
+			<!--fields required for scholarship disbursement-->
+			<div class="mb-3 mt-3">
+			  <label for="id1" class="form-label"><strong>Student ID:</strong></label>
+			  <input type="number" class="form-control" id="id1" data-bs-toggle="tooltip" title="Please enter number only" placeholder="Enter Student ID" name="id1" required>
+			  <div class="invalid-feedback" id="E1_1" style="display:none;">Please fill out this field.</div>
+			</div>
+			<div class="mb-3">
+				<label for="attendance" class="form-label"><strong>Student Average Attendance:</strong></label>
+				<input type="number" class="form-control" id="attendance" data-bs-toggle="tooltip" title="Please enter number from 0 to 100" placeholder="Enter Student Average Attendance Percentage (0-100)" name="attendance" required>
+				<div class="invalid-feedback" id="E1_2" style="display:none;">Please fill out this field with valid value (0-100).</div>
+			</div>
+			<div class="mb-3">
+				<label for="mark" class="form-label"><strong>Student Average Mark:</strong></label>
+				<input type="number" class="form-control" id="mark" data-bs-toggle="tooltip" title="Please enter number from 0 to 100" placeholder="Enter Student Average Mark (0-100)" name="mark" required>
+				<div class="invalid-feedback" id="E1_3" style="display:none;">Please fill out this field with valid value (0-100).</div>
+			</div>
+			<div class="container text-center">
+				<button type="button" class="btn btn-primary col-sm-3" value="Submit" onclick="Check1();">Submit</button>
+				<button type="button" class="btn btn-secondary col-sm-3" onclick="Clear1();">Clear</button>
+			</div>
+		</form>
+	</div>
+
+	<div class="container p-3 my-5 border">
+		<form>
+			<h2 class="text-center">Process Refund to Scholarship Provider</h2>
+	
+			<!--smart contract failed alert message, error message captured from smart contract-->
+			<div id="refundFail" class="alert alert-danger" style="display:none;">
+				<strong>Failed!</strong> <span id="fail2"></span>
+			</div>
+		
+			<!--smart contract run success message-->
+			<div id="refundSuccess" class="alert alert-success" style="display:none;">
+				<strong>Success!</strong> Scholarship refunded successfully to the scholarship provider.
+			</div>
+	
+			<!--fields required for scholarship refund-->
+			<div class="mb-3 mt-3">
+			  <label for="id2" class="form-label"><strong>Student ID:</strong></label>
+			  <input type="number" class="form-control" id="id2" data-bs-toggle="tooltip" title="Please enter number only" placeholder="Enter Student ID" name="id2" required>
+			  <div class="invalid-feedback" id="E2" style="display:none;">Please fill out this field.</div>
+			</div>
+			<div class="container text-center">
+				<button type="button" class="btn btn-primary col-sm-3" value="Process Refund" onclick="Check2();">Process Refund</button>
+				<button type="button" class="btn btn-secondary col-sm-3" onclick="Clear2();">Clear</button>
+			</div>
+		</form>
+	</div>
+
+	<div class="container p-3 my-5 border">
+		<form>
+			<h2 class="text-center">Scholarship Activation</h2>
+	
+			<!--smart contract failed alert message, error message captured from smart contract-->
+			<div id="activeFail" class="alert alert-danger" style="display:none;">
+				<strong>Failed!</strong> <span id="fail3"></span>
+			</div>
+		
+			<!--smart contract run success message-->
+			<div id="activeSuccess" class="alert alert-success" style="display:none;">
+				<strong>Success!</strong> Failed scholarship activated successfully, you may re-enter the attendance and mark for disbursement.
+			</div>
+	
+			<!--fields required for scholarship activation-->
+			<div class="mb-3 mt-3">
+			  <label for="id3" class="form-label"><strong>Student ID:</strong></label>
+			  <input type="number" class="form-control" id="id3" data-bs-toggle="tooltip" title="Please enter number only" placeholder="Enter Student ID" name="id3" required>
+			  <div class="invalid-feedback" id="E3" style="display:none;">Please fill out this field.</div>
+			</div>
+			<div class="container text-center">
+				<button type="button" class="btn btn-primary col-sm-3" value="Activate" onclick="Check3();">Activate</button>
+				<button type="button" class="btn btn-secondary col-sm-3" onclick="Clear3();">Clear</button>
+			</div>
+		</form>
+	</div>
+
+	<!--back button back to landing page-->
+	<div class="my-5 d-grid gap-3">
+		<a href="index.html" type="button" class="btn btn-dark btn-block">Back</a>
+	</div>
+
+
+</body>
+
+</html>
