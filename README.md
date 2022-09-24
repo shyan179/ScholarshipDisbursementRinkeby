@@ -3,13 +3,13 @@
 This is a proof-of-concept smart contracts built using solidity to show the automation on study loan/scholarship disbursement using blockchain. The smart contract is separated into 3 parts, student, loan/scholarship provider and university staff. A decentralised web application (dApp) has been created using ethers.js to connect with the smart contracts and metamask. The dApp allows higher education staff, loan/scholarship institutions and students to interact with the private Ethereum network and transfer the money disbursement automatically once the disbursement requirements are met.
 
 ### Wallet used
-We are using web wallet - Metamask for this project. For this particular project version, we are using Rinkeby Testnet (for your information, due to ETH Merge, the Rinkeby Testnet will be deprecated on Wednesday, October 5th, 2022, I built this version just solely to show the GBP to ETH conversion which Goerli is yet to have the pricefeed chainlink on USD/GBP) for the deployment and testing. There are 2 more versions using different testnets in other repository folders (Ganache and Goerli).
+I am using web wallet - Metamask for this project. For this particular project version, I'm using Rinkeby Testnet (for your information, due to ETH Merge, the Rinkeby Testnet will be deprecated on Wednesday, October 5th, 2022, I built this version just solely to show the GBP to ETH conversion which Goerli is yet to have the pricefeed chainlink on USD/GBP) for the deployment and testing. There are 2 more versions using different testnets in other repository folders (Ganache and Goerli).
 
 For more information
 1. Metamask refer to this link: https://metamask.io/
 
 ### Solidity contracts
-There are 4 smart contracts on this project and all of them are deployed to Rinkeby Testnet via Remix IDE, you can use the "ScholarshipDisbursementRinkeby.sol" and the addresses below on remix IDE to look at the functions.
+There are 4 smart contracts on this project and all of them are deployed to Rinkeby Testnet via Remix IDE, you can use the "priceConvertRinkeby.sol" and "ScholarshipDisbursementRinkeby.sol" and the addresses below on remix IDE to look at the functions.
 
 1. PriceConvert Smart Contract Addrress: 
 ```
